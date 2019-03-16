@@ -47,7 +47,6 @@ Token getNumericToken( FILE *source)
     char c = fgetc(source);
     while(isspace(c))
         c = fgetc(source);
-    printf("%c\n",c);
     Token token;
     int i = 0;
 
@@ -81,45 +80,47 @@ Token getNumericToken( FILE *source)
     ungetc(c, source);
     token.tok[i] = '\0';
     token.type = FloatValue;
-    printf("%s\n",token.tok);
     return token;
+}
+
+int readToken( FILE *source, Token *token){
+    char c = fgetc(source);
+    while(isspace(c))c = fgetc(source);
+    int i = 0;
+    while(c != EOF && !isspace(c)){
+        printf("%c ",c);
+        token->tok[i++] = c;
+        c = fgetc(source);
+    }
+    puts("");
+    token->tok[i] = '\0';
+    printf("%s\n",token->tok);
+    return 0;
 }
 
 Token scanner( FILE *source )
 {
-    char c;
     Token token;
-
     fpos_t pos;
     fgetpos(source, &pos);
-    c = fgetc(source);
-
-    while( isspace(c) ) c = fgetc(source);
-
-    if( isdigit(c) ){
+    readToken(source, &token);
+    if( isdigit(token.tok[0]) ){
         fsetpos(source, &pos);
         return getNumericToken(source);
     }
+    char c = token.tok[0];
 
-    token.tok[0] = c;
-    token.tok[1] = '\0';
     if( islower(c) ){
-        if( c == 'f' )
+        if(strlen(token.tok)>1)
+            token.type = Alphabet;
+        else if( c == 'f' )
             token.type = FloatDeclaration;
         else if( c == 'i' )
             token.type = IntegerDeclaration;
         else if( c == 'p' )
             token.type = PrintOp;
-        else{
+        else
             token.type = Alphabet;
-            int i = 1;
-            /*c = fgetc(source);
-            while(islower(c)){
-                token.tok[i++]=c;
-                c=fgetc(source);
-            }
-            token.tok[i]='\0';*/
-        }
         return token;
     }
     switch(c){
