@@ -112,7 +112,7 @@ typedef struct SymbolTable{
 } SymbolTable;
 
 
-Token getNumericToken( FILE *source, char c );
+Token getNumericToken( FILE *source);
 Token scanner( FILE *source );
 Declaration makeDeclarationNode( Token declare_type, Token identifier );
 Declarations *makeDeclarationTree( Declaration decl, Declarations *decls );
