@@ -90,6 +90,8 @@ char getSymbol(char* tok){
         if(strcmp(tok, name[i])==0)
             return 'a'+i;
     }
+    if(idx == 'f'-'a' || idx == 'i'-'a' || idx == 'p'-'a')
+        idx++;
     strcpy(name[idx],tok);
     return 'a'+(idx++);
 }
@@ -266,6 +268,36 @@ Expression *parseExpressionTail( FILE *source, Expression *lvalue )
             expr->leftOperand = lvalue;
             expr->rightOperand = parseValue(source);
             return parseExpressionTail(source, expr);
+        case MulOp:
+            expr = (Expression *)malloc( sizeof(Expression) );
+            (expr->v).type = MulNode;
+            (expr->v).val.op = Mul;
+            if((lvalue->v).type == PlusNode || (lvalue->v).type == MinusNode){
+                expr->leftOperand = lvalue->rightOperand;
+                expr->rightOperand = parseValue(source);
+                lvalue->rightOperand = expr;
+                return parseExpressionTail(source, lvalue);
+            }
+            else{
+                expr->leftOperand = lvalue;
+                expr->rightOperand = parseValue(source);
+                return parseExpressionTail(source, expr);
+            }
+        case DivOp:
+            expr = (Expression *)malloc( sizeof(Expression) );
+            (expr->v).type = DivNode;
+            (expr->v).val.op = Div;
+            if((lvalue->v).type == PlusNode || (lvalue->v).type == MinusNode){
+                expr->leftOperand = lvalue->rightOperand;
+                expr->rightOperand = parseValue(source);
+                lvalue->rightOperand = expr;
+                return parseExpressionTail(source, lvalue);
+            }
+            else{
+                expr->leftOperand = lvalue;
+                expr->rightOperand = parseValue(source);
+                return parseExpressionTail(source, expr);
+            }
         case Alphabet:
         case PrintOp:
             fsetpos(source, &pos);
@@ -300,6 +332,36 @@ Expression *parseExpression( FILE *source, Expression *lvalue )
             expr->leftOperand = lvalue;
             expr->rightOperand = parseValue(source);
             return parseExpressionTail(source, expr);
+        case MulOp:
+            expr = (Expression *)malloc( sizeof(Expression) );
+            (expr->v).type = MulNode;
+            (expr->v).val.op = Mul;
+            if((lvalue->v).type == PlusNode || (lvalue->v).type == MinusNode){
+                expr->leftOperand = lvalue->rightOperand;
+                expr->rightOperand = parseValue(source);
+                lvalue->rightOperand = expr;
+                return parseExpressionTail(source, lvalue);
+            }
+            else{
+                expr->leftOperand = lvalue;
+                expr->rightOperand = parseValue(source);
+                return parseExpressionTail(source, expr);
+            }
+        case DivOp:
+            expr = (Expression *)malloc( sizeof(Expression) );
+            (expr->v).type = DivNode;
+            (expr->v).val.op = Div;
+            if((lvalue->v).type == PlusNode || (lvalue->v).type == MinusNode){
+                expr->leftOperand = lvalue->rightOperand;
+                expr->rightOperand = parseValue(source);
+                lvalue->rightOperand = expr;
+                return parseExpressionTail(source, lvalue);
+            }
+            else{
+                expr->leftOperand = lvalue;
+                expr->rightOperand = parseValue(source);
+                return parseExpressionTail(source, expr);
+            }
         case Alphabet:
         case PrintOp:
             fsetpos(source, &pos);
@@ -568,6 +630,42 @@ void checkexpression( Expression * expr, SymbolTable * table )
     }
 }
 
+void constFold(Expression* expr){
+    Expression* leftExpr = expr->leftOperand;
+    Expression* rightExpr = expr->rightOperand;
+    if(leftExpr)
+        constFold(leftExpr);
+    if(rightExpr)
+        constFold(rightExpr);
+    if(leftExpr && leftExpr->v.type != IntConst && leftExpr->v.type != FloatConst)
+        return;
+    if(rightExpr && rightExpr->v.type != IntConst && rightExpr->v.type != FloatConst)
+        return;
+    switch(expr->v.type){
+        case IntConst:
+        case FloatConst:
+        case Identifier:
+            return;
+        case IntToFloatConvertNode:
+            expr->v.type = FloatConst;
+            expr->v.fvalue = (float) leftExpr->v.ivalue;
+            expr->leftOperand=NULL;
+            return;
+        case PlusNode:
+            switch(expr->type){
+                case Int:
+                    expr->v.ivalue = leftExpr->v.ivalue + rightExpr->v.ivalue;
+                    expr->v.type=IntConst;
+                    break;
+                case Float:
+                    expr->v.fvalue = leftExpr->v.fvalue + rightExpr->v.fvalue;
+                    expr->v.type=FloatConst;
+                    break;
+            }
+    }
+}
+
+
 void checkstmt( Statement *stmt, SymbolTable * table )
 {
     if(stmt->type == Assignment){
@@ -610,6 +708,12 @@ void fprint_op( FILE *target, ValueType op )
         case PlusNode:
             fprintf(target,"+\n");
             break;
+        case MulNode:
+            fprintf(target,"*\n");
+            break;
+        case DivNode:
+            fprintf(target,"/\n");
+            break;
         default:
             fprintf(target,"Error in fprintf_op ValueType = %d\n",op);
             break;
@@ -618,7 +722,6 @@ void fprint_op( FILE *target, ValueType op )
 
 void fprint_expr( FILE *target, Expression *expr)
 {
-
     if(expr->leftOperand == NULL){
         switch( (expr->v).type ){
             case Identifier:
@@ -637,11 +740,11 @@ void fprint_expr( FILE *target, Expression *expr)
     }
     else{
         fprint_expr(target, expr->leftOperand);
-        if(expr->rightOperand == NULL){
-            fprintf(target,"5k\n");
-        }
+        if(expr->rightOperand == NULL)
+            fprintf(target,"5 k\n");
         else{
-            //	fprint_right_expr(expr->rightOperand);
+            if(expr->rightOperand->type == Float || expr->leftOperand->type == Float)
+                fprintf(target,"5 k\n");
             fprint_expr(target, expr->rightOperand);
             fprint_op(target, (expr->v).type);
         }

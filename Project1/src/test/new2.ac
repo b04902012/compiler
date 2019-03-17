@@ -1,0 +1,26 @@
+f asd
+f asdf
+f asdfg
+f as
+f a
+
+a = 5
+asd = 8 / 3
+p asd
+as = 8 / 3.0
+p as
+asdf = 8.0 / 3
+asdfg = 8.0 / 3.0
+p asdfg
+p asdf
+
+a = 5
+as = 3
+asdf = a + as
+asd = as / a
+asdfg = a * as
+p a
+p as
+p asd
+p asdf
+p asdfg

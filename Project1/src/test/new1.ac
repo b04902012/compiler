@@ -1,0 +1,18 @@
+i poi
+i tt
+f qwe
+i mmm
+
+poi = 7122
+tt = 88
+mmm = poi + tt
+p mmm
+p tt
+qwe = mmm / 2
+p qwe
+qwe = mmm / 3
+p qwe
+qwe = mmm / 4
+p qwe
+qwe = mmm / 5
+p qwe

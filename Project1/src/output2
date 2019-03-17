@@ -10,12 +10,14 @@ sc
 2
 sd
 0 k
-la
-ld
-+
-sc
+1.000000
+5 k
+2
+5 k
+/
+sb
 0 k
-lc
+lb
 p
 ld
 p
