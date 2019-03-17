@@ -31,6 +31,7 @@ typedef enum Operation { Plus, Minus, Mul, Div, Assign, IntToFloatConvert } Oper
 typedef struct Token{
     TokenType type;
     char tok[1025];
+    char symbol;
 }Token;
 
 /*** The following are nodes of the AST. ***/

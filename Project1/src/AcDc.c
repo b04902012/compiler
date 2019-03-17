@@ -83,16 +83,28 @@ Token getNumericToken( FILE *source)
     return token;
 }
 
+char getSymbol(char* tok){
+    static int idx = 0;
+    static char name[26][300];
+    for(int i=0;i<idx;i++){
+        if(strcmp(tok, name[i])==0)
+            return 'a'+i;
+    }
+    strcpy(name[idx],tok);
+    return 'a'+(idx++);
+}
+
 int readToken( FILE *source, Token *token){
     char c = fgetc(source);
-    while(isspace(c))c = fgetc(source);
+    while(isspace(c)){
+        c = fgetc(source);
+    }
     int i = 0;
-    while(c != EOF && !isspace(c)){
+    while(c!=EOF&&!isspace(c)){
         printf("%c ",c);
         token->tok[i++] = c;
         c = fgetc(source);
     }
-    puts("");
     token->tok[i] = '\0';
     printf("%s\n",token->tok);
     return 0;
@@ -102,7 +114,7 @@ Token scanner( FILE *source )
 {
     Token token;
     fpos_t pos;
-    fgetpos(source, &pos);
+    printf("fgetpos %d\n",fgetpos(source, &pos));
     readToken(source, &token);
     if( isdigit(token.tok[0]) ){
         fsetpos(source, &pos);
@@ -121,6 +133,8 @@ Token scanner( FILE *source )
             token.type = PrintOp;
         else
             token.type = Alphabet;
+        if(token.type == Alphabet)
+            token.symbol = getSymbol(token.tok);
         return token;
     }
     switch(c){
@@ -139,6 +153,7 @@ Token scanner( FILE *source )
         case '/':
             token.type = DivOp;
             return token;
+        case '\0':
         case EOF:
             token.type = EOFsymbol;
             token.tok[0] = '\0';
@@ -211,7 +226,7 @@ Expression *parseValue( FILE *source )
     switch(token.type){
         case Alphabet:
             (value->v).type = Identifier;
-            (value->v).val.id = token.tok[0];
+            (value->v).val.id = token.symbol;
             break;
         case IntValue:
             (value->v).type = IntConst;
@@ -231,6 +246,8 @@ Expression *parseValue( FILE *source )
 
 Expression *parseExpressionTail( FILE *source, Expression *lvalue )
 {
+    fpos_t pos;
+    fgetpos(source, &pos);
     Token token = scanner(source);
     Expression *expr;
 
@@ -251,7 +268,7 @@ Expression *parseExpressionTail( FILE *source, Expression *lvalue )
             return parseExpressionTail(source, expr);
         case Alphabet:
         case PrintOp:
-            ungetc(token.tok[0], source);
+            fsetpos(source, &pos);
             return lvalue;
         case EOFsymbol:
             return lvalue;
@@ -263,6 +280,8 @@ Expression *parseExpressionTail( FILE *source, Expression *lvalue )
 
 Expression *parseExpression( FILE *source, Expression *lvalue )
 {
+    fpos_t pos;
+    fgetpos(source, &pos);
     Token token = scanner(source);
     Expression *expr;
 
@@ -283,7 +302,7 @@ Expression *parseExpression( FILE *source, Expression *lvalue )
             return parseExpressionTail(source, expr);
         case Alphabet:
         case PrintOp:
-            ungetc(token.tok[0], source);
+            fsetpos(source, &pos);
             return NULL;
         case EOFsymbol:
             return NULL;
@@ -304,7 +323,7 @@ Statement parseStatement( FILE *source, Token token )
             if(next_token.type == AssignmentOp){
                 value = parseValue(source);
                 expr = parseExpression(source, value);
-                return makeAssignmentNode(token.tok[0], value, expr);
+                return makeAssignmentNode(token.symbol, value, expr);
             }
             else{
                 printf("Syntax Error: Expect an assignment op %s\n", next_token.tok);
@@ -313,7 +332,7 @@ Statement parseStatement( FILE *source, Token token )
         case PrintOp:
             next_token = scanner(source);
             if(next_token.type == Alphabet)
-                return makePrintNode(next_token.tok[0]);
+                return makePrintNode(next_token.symbol);
             else{
                 printf("Syntax Error: Expect an identifier %s\n", next_token.tok);
                 exit(1);
@@ -364,7 +383,7 @@ Declaration makeDeclarationNode( Token declare_type, Token identifier )
         default:
             break;
     }
-    tree_node.name = identifier.tok[0];
+    tree_node.name = identifier.symbol;
 
     return tree_node;
 }
