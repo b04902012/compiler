@@ -1,23 +1,57 @@
-1
+5.000000
+se
+0 k
+2.000000
 sa
 0 k
-2.100000
-sb
-0 k
-1
-sc
-0 k
-2
+la
+p
+2.666667
 sd
 0 k
-1.000000
-5 k
-2
-5 k
-/
+ld
+p
+2.666667
 sb
 0 k
+2.666667
+sc
+0 k
+lc
+p
 lb
 p
+5.000000
+se
+0 k
+3.000000
+sd
+0 k
+le
+5 k
 ld
++
+sb
+0 k
+ld
+5 k
+le
+/
+sa
+0 k
+le
+5 k
+ld
+*
+sc
+0 k
+le
+p
+ld
+p
+la
+p
+lb
+p
+lc
 p

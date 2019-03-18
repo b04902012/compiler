@@ -648,21 +648,56 @@ void constFold(Expression* expr){
             return;
         case IntToFloatConvertNode:
             expr->v.type = FloatConst;
-            expr->v.fvalue = (float) leftExpr->v.ivalue;
+            expr->v.val.fvalue = (float) leftExpr->v.val.ivalue;
             expr->leftOperand=NULL;
-            return;
+            break;
         case PlusNode:
             switch(expr->type){
                 case Int:
-                    expr->v.ivalue = leftExpr->v.ivalue + rightExpr->v.ivalue;
+                    expr->v.val.ivalue = leftExpr->v.val.ivalue + rightExpr->v.val.ivalue;
                     expr->v.type=IntConst;
                     break;
                 case Float:
-                    expr->v.fvalue = leftExpr->v.fvalue + rightExpr->v.fvalue;
+                    expr->v.val.fvalue = leftExpr->v.val.fvalue + rightExpr->v.val.fvalue;
+                    expr->v.type=FloatConst;
+                    break;
+            }
+        case MinusNode:
+            switch(expr->type){
+                case Int:
+                    expr->v.val.ivalue = leftExpr->v.val.ivalue - rightExpr->v.val.ivalue;
+                    expr->v.type=IntConst;
+                    break;
+                case Float:
+                    expr->v.val.fvalue = leftExpr->v.val.fvalue - rightExpr->v.val.fvalue;
+                    expr->v.type=FloatConst;
+                    break;
+            }
+        case MulNode:
+            switch(expr->type){
+                case Int:
+                    expr->v.val.ivalue = leftExpr->v.val.ivalue * rightExpr->v.val.ivalue;
+                    expr->v.type=IntConst;
+                    break;
+                case Float:
+                    expr->v.val.fvalue = leftExpr->v.val.fvalue * rightExpr->v.val.fvalue;
+                    expr->v.type=FloatConst;
+                    break;
+            }
+        case DivNode:
+            switch(expr->type){
+                case Int:
+                    expr->v.val.ivalue = leftExpr->v.val.ivalue / rightExpr->v.val.ivalue;
+                    expr->v.type=IntConst;
+                    break;
+                case Float:
+                    expr->v.val.fvalue = leftExpr->v.val.fvalue / rightExpr->v.val.fvalue;
                     expr->v.type=FloatConst;
                     break;
             }
     }
+    expr->leftOperand=NULL;
+    expr->rightOperand=NULL;
 }
 
 
@@ -764,6 +799,7 @@ void gencode(Program prog, FILE * target)
                 fprintf(target,"p\n");
                 break;
             case Assignment:
+                constFold(stmt.stmt.assign.expr);
                 fprint_expr(target, stmt.stmt.assign.expr);
                 /*
                    if(stmt.stmt.assign.type == Int){
@@ -778,7 +814,6 @@ void gencode(Program prog, FILE * target)
         }
         stmts=stmts->rest;
     }
-
 }
 
 
